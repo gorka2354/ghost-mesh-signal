@@ -8,12 +8,14 @@ app.get("/health", (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
-const peerServer = ExpressPeerServer(app.listen(process.env.PORT || 9000), {
+const httpServer = app.listen(process.env.PORT || 9000);
+
+const peerServer = ExpressPeerServer(httpServer, {
   path: "/",
   allow_discovery: false
 });
 
-app.use("/", peerServer);
+app.use("/peerjs", peerServer);
 
 peerServer.on("connection", (client) => {
   console.log("connected:", client.getId());
