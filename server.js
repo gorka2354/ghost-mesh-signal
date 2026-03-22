@@ -1,17 +1,26 @@
-const { PeerServer } = require("peer");
+const { ExpressPeerServer } = require("peer");
+const express = require("express");
 
-const server = PeerServer({
-  port: process.env.PORT || 9000,
+const app = express();
+
+// Health-check endpoint (для keep-alive пингов от клиентов)
+app.get("/health", (req, res) => {
+  res.json({ ok: true, uptime: process.uptime() });
+});
+
+const peerServer = ExpressPeerServer(app.listen(process.env.PORT || 9000), {
   path: "/",
   allow_discovery: false
 });
 
-server.on("connection", (client) => {
+app.use("/", peerServer);
+
+peerServer.on("connection", (client) => {
   console.log("connected:", client.getId());
 });
 
-server.on("disconnect", (client) => {
+peerServer.on("disconnect", (client) => {
   console.log("disconnected:", client.getId());
 });
 
-console.log("PeerJS signaling server running");
+console.log("PeerJS signaling server running on port " + (process.env.PORT || 9000));
